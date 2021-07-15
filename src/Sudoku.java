@@ -4,11 +4,10 @@
  * http://sudokuspoiler.azurewebsites.net/Sudoku
  */
 
-//import java.util.List;
+import java.util.List;
 import java.util.ArrayList;
 
-import java.util.HashSet;
-import java.util.Comparator;
+//import java.util.Comparator;
 
 /*
  * Use backtracking
@@ -16,23 +15,32 @@ import java.util.Comparator;
  */
 
 public class Sudoku {
-	private ArrayList<int[]> empty = new ArrayList<int[]>();
-	private int solutions = 0;
+	private List<int[]> empty = new ArrayList<int[]>();
 	private int startNumber = 1;     // start from this
-	private int squareEdge;
+	private int sub_row_length;
+	private int sub_col_length;
+	
+	private List<int[][]> solutionSets = new ArrayList<>();
+	private int solutions = 0;
 	
 	public Sudoku (int n) {
-		squareEdge = (int) Math.sqrt(n);
-		if (squareEdge * squareEdge != n) {
+		this.sub_row_length = (int) Math.sqrt(n);
+		this.sub_col_length = (int) Math.sqrt(n);
+		if (sub_row_length * sub_col_length != n) {
 			throw new IllegalArgumentException("Error input");
 		}
+	}
+	
+	public Sudoku (int sub_row_length, int sub_col_length) {
+		this.sub_row_length = sub_row_length;
+		this.sub_col_length = sub_col_length;
 	}
 	
 	public void initialize(int[][] a) {
 		for (int i = 0; i < a.length; i++) {
 			for (int j = 0; j < a[i].length; j++) {
 				if (a[i][j] == -1) {
-					HashSet<Integer> remaining = findNumber(a, j, i, startNumber);
+					List<Integer> remaining = findNumber(a, j, i, startNumber);
 					
 					int[] tmp = new int[2 + remaining.size()];
 					tmp[0] = j;
@@ -48,11 +56,11 @@ public class Sudoku {
 			}
 		}
 		
-		empty.sort(new Comparator<int[]>() {
-			public int compare(int[] o1, int[] o2) {
-				return o1.length - o2.length;
-			}
-		});
+//		empty.sort(new Comparator<int[]>() {
+//			public int compare(int[] o1, int[] o2) {
+//				return o1.length - o2.length;
+//			}
+//		});
 	}
 	
 	public void solve(int[][] a, int n) {
@@ -76,38 +84,46 @@ public class Sudoku {
 	}
 	
 	// find the possible numbers in this cell
-	public HashSet<Integer> findNumber(int[][] a, int x, int y, int start) {
-		int squareX = x / squareEdge;
-		int squareY = y / squareEdge;
+	public List<Integer> findNumber(int[][] a, int x, int y, int start) {
+		int rectangleX = x / this.sub_row_length;
+		int rectangleY = y / this.sub_col_length;
 		
-		HashSet<Integer> remain = new HashSet<Integer>();
-		for (int i = start; i <= a.length + start - 1; i++) {
-			remain.add(i);
-		}
+		boolean[] filled = new boolean[a.length + start];
 		for (int i = 0; i < a.length; i++) {
 			// Search row
-			if (a[y][i] != -1)
-				remain.remove(a[y][i]);
+			if (a[y][i] != -1) {
+				filled[a[y][i]] = true;
+			}
 			// Search column
-			if (a[i][x] != -1)
-				remain.remove(a[i][x]);
+			if (a[i][x] != -1) {
+				filled[a[i][x]] = true;
+			}
 		}
 		
-		// Search square
-		for (int j1 = 0; j1 < squareEdge; j1++) {
-			for (int j2 = 0; j2 < squareEdge; j2++) {
-				int xLabel = squareX * squareEdge + j2;
-				int yLabel = squareY * squareEdge + j1;
-				if (a[yLabel][xLabel] != -1)
-					remain.remove(a[yLabel][xLabel]);
+		// Search sub-region
+		for (int j1 = 0; j1 < this.sub_col_length; j1++) {
+			for (int j2 = 0; j2 < this.sub_row_length; j2++) {
+				int xLabel = rectangleX * this.sub_row_length + j2;
+				int yLabel = rectangleY * this.sub_col_length + j1;
+				if (a[yLabel][xLabel] != -1) {
+					filled[a[yLabel][xLabel]] = true;
+				}
+			}
+		}
+		
+		List<Integer> remain = new ArrayList<>();
+		for (int i = start; i < filled.length; i++) {
+			if (!filled[i]) {
+				remain.add(i);
 			}
 		}
 		return remain;
 	}
 	
 	public boolean checkTable(int[][] a, int x, int y, int value) {
-		int squareX = x / squareEdge;
-		int squareY = y / squareEdge;
+		int squareX = x / this.sub_row_length;
+		int squareY = y / this.sub_col_length;
+		
 		for (int i = 0; i < a.length; i++) {
 			// Check row
 			if (a[y][i] == value && i != x)
@@ -117,11 +133,11 @@ public class Sudoku {
 				return false;
 		}
 		
-		// Check square
-		for (int j1 = 0; j1 < squareEdge; j1++) {
-			for (int j2 = 0; j2 < squareEdge; j2++) {
-				int xLabel = squareX * squareEdge + j2;
-				int yLabel = squareY * squareEdge + j1;
+		// Check sub-region
+		for (int j1 = 0; j1 < this.sub_col_length; j1++) {
+			for (int j2 = 0; j2 < this.sub_row_length; j2++) {
+				int xLabel = squareX * this.sub_row_length + j2;
+				int yLabel = squareY * this.sub_col_length + j1;
 				if ( a[yLabel][xLabel] == value && (xLabel != x || yLabel != y) )
 					return false;
 			}
@@ -141,5 +157,18 @@ public class Sudoku {
 			System.out.println();
 		}
 		System.out.println();
+		
+		// Store the solution to solutionSets
+		int[][] sol = new int[n.length][n[0].length];
+		for (int i = 0; i < sol.length; i++) {
+			for (int j = 0; j < sol[i].length; j++) {
+				sol[i][j] = n[i][j];
+			}
+		}
+		solutionSets.add(sol);
+	}
+	
+	public List<int[][]> getSolutionSets() {
+		return solutionSets;
 	}
 }
