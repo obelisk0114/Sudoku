@@ -20,6 +20,7 @@ public class SudokuSolver {
 	}
 	
 	public static void dancingLinksXSolver(int[][] board, int length, int width) {
+		System.out.println("\nUse dancing links (DLX).");
 		SudokuDLX solver = new SudokuDLX(board, length, width);
 		
 		long preTime = System.currentTimeMillis();
@@ -34,6 +35,7 @@ public class SudokuSolver {
 	}
 	
 	public static List<int[][]> naiveSolver(int[][] board, int length, int width) {
+		System.out.println("\nUse naive sudoku solver.");
 		Sudoku sd = new Sudoku(length, width);
 
 		long preTime = System.currentTimeMillis();
@@ -167,7 +169,7 @@ public class SudokuSolver {
 		int length = tools.getX_length();
 		int width = tools.getY_length();
 		
-		// dancingLinksXSolver(board, length, width);
+		dancingLinksXSolver(board, length, width);
 		List<int[][]> solutionSets = naiveSolver(board, length, width);
 		for (int[][] result : solutionSets) {
 			if (!tools.validateSolution(result, length, width)) {
