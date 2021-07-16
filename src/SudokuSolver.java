@@ -1,6 +1,8 @@
 import java.util.Scanner;
 
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 import dlx.SudokuDLX;
 
@@ -89,6 +91,36 @@ public class SudokuSolver {
 		return board;
 	}
 	
+	public static int decideDisableSolver(String s) {
+		String processed = s.toLowerCase().replaceAll("_| |-", "");
+		
+		Set<String> disableDLXSets = new HashSet<>();
+		Set<String> disableNaiveSets = new HashSet<>();
+		
+		disableDLXSets.add("dlx");
+		disableDLXSets.add("dancinglinksx");
+		disableDLXSets.add("dancinglinks");
+		
+		disableNaiveSets.add("naive");
+		
+		int result = -1;
+		
+		// disable DLX
+		if (disableDLXSets.contains(processed)) {
+			result = 0;
+		}
+		// disable Naive
+		else if (disableNaiveSets.contains(processed)) {
+			result = 1;
+		}
+		// others
+		else {
+			result = 2;
+		}
+		
+		return result;
+	}
+	
 	/**
 	 * @param args
 	 * 
@@ -101,7 +133,10 @@ public class SudokuSolver {
 		int[][] board;
 		boolean generateSolutionFile = false;
 		String solutionPath = "";
+		
 		boolean keyboardReading = true;
+		boolean enableNaiveSolver = true;
+		boolean enableDLXSolver = true;
 		
 		switch (args.length) {
 		case 0:
@@ -115,6 +150,7 @@ public class SudokuSolver {
 			break;
 			
 		// -i sudoku.txt : generate solution files
+		// -d dlx : disable DLXSolver
 		// sudoku.txt sudokuSolution.txt
 		case 2:
 			if (args[0].charAt(0) == '-') {
@@ -123,6 +159,21 @@ public class SudokuSolver {
 					keyboardReading = false;
 					
 					generateSolutionFile = true;
+				}
+				else if (args[0].length() == 2 && args[0].charAt(1) == 'd') {
+					board = readSudokuPuzzle(tools);
+					
+					int decision = decideDisableSolver(args[1]);
+					if (decision == 0) {
+						enableDLXSolver = false;
+					}
+					else if (decision == 1) {
+						enableNaiveSolver = false;
+					}
+					else {
+						System.out.println("Illegal arguments. Disable naive solver");
+						enableNaiveSolver = false;
+					}
 				}
 				else {
 					System.out.println("Illegal arguments. Use keyboard reading");
@@ -140,6 +191,8 @@ public class SudokuSolver {
 			
 		// -i sudoku.txt -o sudokuSolution.txt
 		// -o sudokuSolution.txt -i sudoku.txt
+		// -i sudoku.txt -d naive : disable NaiveSolver
+		// -d dancinglinksx -i sudoku.txt : disable DLXSolver
 		case 4:
 			if (args[0].equals("-i") && args[2].equals("-o")) {
 				board = tools.readTXT(args[1]);
@@ -155,12 +208,107 @@ public class SudokuSolver {
 				solutionPath = args[1];
 				generateSolutionFile = true;
 			}
+			else if (args[0].equals("-i") && args[2].equals("-d")) {
+				board = tools.readTXT(args[1]);
+				keyboardReading = false;
+				
+				generateSolutionFile = true;
+				
+				int decision = decideDisableSolver(args[3]);
+				if (decision == 0) {
+					enableDLXSolver = false;
+				}
+				else if (decision == 1) {
+					enableNaiveSolver = false;
+				}
+				else {
+					System.out.println("Illegal arguments. Disable naive solver");
+					enableNaiveSolver = false;
+				}
+			}
+			else if (args[0].equals("-d") && args[2].equals("-i")) {
+				board = tools.readTXT(args[3]);
+				keyboardReading = false;
+				
+				generateSolutionFile = true;
+				
+				int decision = decideDisableSolver(args[1]);
+				if (decision == 0) {
+					enableDLXSolver = false;
+				}
+				else if (decision == 1) {
+					enableNaiveSolver = false;
+				}
+				else {
+					System.out.println("Illegal arguments. Disable naive solver");
+					enableNaiveSolver = false;
+				}
+			}
 			else {
 				System.out.println("Illegal arguments. Use keyboard reading");
 				board = readSudokuPuzzle(tools);
 			}
 			break;
 			
+		// -i : input file
+		// -o : output file
+		// -d : disable solver
+		case 6:
+			String iArgument = "";
+			String oArgument = "";
+			String dArgument = "";
+			
+			for (int i = 0; i < 5; i++) {
+				switch (args[i]) {
+				case "-i":
+					if (args[i + 1].charAt(0) != '-') {
+						iArgument = args[i + 1];
+					}
+					i++;
+					break;
+				case "-o":
+					if (args[i + 1].charAt(0) != '-') {
+						oArgument = args[i + 1];
+					}
+					i++;
+					break;
+				case "-d":
+					if (args[i + 1].charAt(0) != '-') {
+						dArgument = args[i + 1];
+					}
+					i++;
+					break;
+				default:
+					System.out.println("Illegal arguments. Neglect");
+					i++;
+				}
+			}
+			
+			if (!iArgument.isEmpty()) {
+				board = tools.readTXT(iArgument);
+			}
+			else {
+				board = readSudokuPuzzle(tools);
+			}
+			
+			if (!oArgument.isEmpty()) {
+				solutionPath = oArgument;
+			}
+			if (!dArgument.isEmpty()) {
+				int decision = decideDisableSolver(dArgument);
+				if (decision == 0) {
+					enableDLXSolver = false;
+				}
+				else if (decision == 1) {
+					enableNaiveSolver = false;
+				}
+				else {
+					System.out.println("Illegal arguments. Disable naive solver");
+					enableNaiveSolver = false;
+				}
+			}
+			break;
+		
 		// default
 		default:
 			board = readSudokuPuzzle(tools);
@@ -169,22 +317,31 @@ public class SudokuSolver {
 		int length = tools.getX_length();
 		int width = tools.getY_length();
 		
-		dancingLinksXSolver(board, length, width);
-		List<int[][]> solutionSets = naiveSolver(board, length, width);
-		for (int[][] result : solutionSets) {
-			if (!tools.validateSolution(result, length, width)) {
-				System.out.println("\n\n\n !!! \n");
-				System.out.println("This solution is incorrect. Check the solver");
-				throw new RuntimeException("Wrong answer");
-			}
+		if (length * width > 14) {
+			enableNaiveSolver = false;
 		}
 		
-		if (generateSolutionFile) {
-			if (solutionPath.isEmpty()) {
-				tools.outputTXT(solutionSets);
+		if (enableDLXSolver) {			
+			dancingLinksXSolver(board, length, width);
+		}
+		
+		if (enableNaiveSolver) {
+			List<int[][]> solutionSets = naiveSolver(board, length, width);
+			for (int[][] result : solutionSets) {
+				if (!tools.validateSolution(result, length, width)) {
+					System.out.println("\n\n\n !!! \n");
+					System.out.println("This solution is incorrect. Check the solver");
+					throw new RuntimeException("Wrong answer");
+				}
 			}
-			else {
-				tools.outputTXT(solutionSets, solutionPath);
+
+			if (generateSolutionFile) {
+				if (solutionPath.isEmpty()) {
+					tools.outputTXT(solutionSets);
+				}
+				else {
+					tools.outputTXT(solutionSets, solutionPath);
+				}
 			}
 		}
 		

@@ -31,7 +31,25 @@
 + 主程式 (main function)：`SudokuSolver.java`。
 
 ```
+java -jar Sudoku.jar
+
 java -jar Sudoku.jar -i sudoku.txt
+
+// disable DLX solver
+java -jar Sudoku.jar -d dlx
+java -jar Sudoku.jar -d dancinglinksx
+java -jar Sudoku.jar -d dancinglinks
+
+// disable naive solver
+java -jar Sudoku.jar -d naive
+
+java -jar Sudoku.jar sudoku.txt sudokuSolution.txt
+
+java -jar Sudoku.jar -i sudoku.txt -o sudokuSolution.txt
+java -jar Sudoku.jar -i sudoku.txt -d naive
+
+java -jar Sudoku.jar -i sudoku.txt -o sudokuSolution.txt -d naive
+
 ```
     
 + 工具程式 (tool provider)：`Tools.java`。
