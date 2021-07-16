@@ -127,9 +127,28 @@ public class Tools {
 	
 	// Generate solution files
 	public void outputTXT(int[][] table) {
+		String name = "sudokuSolution.txt";
+		outputTXT(table, name);
+	}
+	
+	// Generate solution files
+	public void outputTXT(List<int[][]> tables) {
+		String name = "sudokuSolution.txt";
+		outputTXT(tables, name);
+	}
+
+	// Generate solution files
+	public void outputTXT(int[][] table, String fileName) {
+		List<int[][]> tables = new ArrayList<>();
+		tables.add(table);
+		
+		outputTXT(tables, fileName);
+	}
+
+	// Generate solution files
+	public void outputTXT(List<int[][]> tables, String fileName) {
 		try {
-			String name = "sudokuSolution.txt";
-			File file = new File(name);
+			File file = new File(fileName);
 			if (file.isFile() && file.exists()) {
 				System.out.println("Already exist a file with same name");
 				throw new IllegalArgumentException("Already exist");
@@ -138,10 +157,17 @@ public class Tools {
 			FileWriter fw = new FileWriter(file);
 			BufferedWriter bw = new BufferedWriter(fw);
 			
-			for (int i = 0; i < table.length; i++) {
-				for (int j = 0; j < table[i].length; j++) {
-					bw.write(table[i][j] + " ");
+			for (int[][] table : tables) {				
+				for (int i = 0; i < table.length; i++) {
+					for (int j = 0; j < table[i].length; j++) {
+						bw.write(table[i][j] + " ");
+					}
+					bw.newLine();
 				}
+				
+				bw.flush();
+				
+				bw.newLine();
 				bw.newLine();
 			}
 			bw.close();
