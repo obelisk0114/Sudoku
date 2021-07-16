@@ -36,7 +36,16 @@ public class Sudoku {
 		this.sub_col_length = sub_col_length;
 	}
 	
-	public void initialize(int[][] a) {
+	public void solveSudoku(int[][] a) {
+		initialize(a);
+		solve(a, 0);
+	}
+	
+	private void initialize(int[][] a) {
+		if (!empty.isEmpty()) {
+			empty.clear();
+		}
+		
 		for (int i = 0; i < a.length; i++) {
 			for (int j = 0; j < a[i].length; j++) {
 				if (a[i][j] == -1) {
@@ -63,7 +72,7 @@ public class Sudoku {
 //		});
 	}
 	
-	public void solve(int[][] a, int n) {
+	private void solve(int[][] a, int n) {
 		if (n == empty.size()) {
 			printTable(a);
 			solutions++;
