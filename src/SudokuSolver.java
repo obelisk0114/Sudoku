@@ -96,14 +96,97 @@ public class SudokuSolver {
 		Scanner keyboard = new Scanner(System.in);
 		Tools tools = new Tools(keyboard);
 		
-		int[][] board = readSudokuPuzzle(tools);
+		int[][] board;
+		boolean generateSolutionFile = false;
+		String solutionPath = "";
+		boolean keyboardReading = true;
+		
+		switch (args.length) {
+		case 0:
+			board = readSudokuPuzzle(tools);
+			break;
+			
+		// sudoku.txt
+		case 1:
+			board = tools.readTXT(args[0]);
+			keyboardReading = false;
+			break;
+			
+		// -i sudoku.txt : generate solution files
+		// sudoku.txt sudokuSolution.txt
+		case 2:
+			if (args[0].charAt(0) == '-') {
+				if (args[0].length() == 2 && args[0].charAt(1) == 'i') {
+					board = tools.readTXT(args[1]);
+					keyboardReading = false;
+					
+					generateSolutionFile = true;
+				}
+				else {
+					System.out.println("Illegal arguments. Use keyboard reading");
+					board = readSudokuPuzzle(tools);
+				}
+			}
+			else {
+				board = tools.readTXT(args[0]);
+				keyboardReading = false;
+				
+				solutionPath = args[1];
+				generateSolutionFile = true;
+			}
+			break;
+			
+		// -i sudoku.txt -o sudokuSolution.txt
+		// -o sudokuSolution.txt -i sudoku.txt
+		case 4:
+			if (args[0].equals("-i") && args[2].equals("-o")) {
+				board = tools.readTXT(args[1]);
+				keyboardReading = false;
+				
+				solutionPath = args[3];
+				generateSolutionFile = true;
+			}
+			else if (args[0].equals("-o") && args[2].equals("-i")) {
+				board = tools.readTXT(args[3]);
+				keyboardReading = false;
+				
+				solutionPath = args[1];
+				generateSolutionFile = true;
+			}
+			else {
+				System.out.println("Illegal arguments. Use keyboard reading");
+				board = readSudokuPuzzle(tools);
+			}
+			break;
+			
+		// default
+		default:
+			board = readSudokuPuzzle(tools);
+		}
+		
 		int length = tools.getX_length();
 		int width = tools.getY_length();
 		
 		// dancingLinksXSolver(board, length, width);
 		List<int[][]> solutionSets = naiveSolver(board, length, width);
+		for (int[][] result : solutionSets) {
+			if (!tools.validateSolution(result, length, width)) {
+				System.out.println("\n\n\n !!! \n");
+				System.out.println("This solution is incorrect. Check the solver");
+				throw new RuntimeException("Wrong answer");
+			}
+		}
 		
-		boolean testResult = true;
+		if (generateSolutionFile) {
+			if (solutionPath.isEmpty()) {
+				tools.outputTXT(solutionSets);
+			}
+			else {
+				tools.outputTXT(solutionSets, solutionPath);
+			}
+		}
+		
+		boolean testResult = keyboardReading;
 		if (testResult) {
 			System.out.println();
 			int[][] result = readMatrixFromKeyboard(keyboard, "result");
@@ -117,7 +200,6 @@ public class SudokuSolver {
 			System.out.println("\nValidate result ... ");
 			System.out.println(tools.validateSolution(result, length, width));
 		}
-		
 		
 		keyboard.close();
 	}
