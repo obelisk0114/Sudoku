@@ -37,7 +37,7 @@ public class SudokuSolver {
 	}
 	
 	public static List<int[][]> naiveSolver(int[][] board, int length, int width) {
-		System.out.println("\nUse naive sudoku solver.");
+		System.out.println("\nUse naive sudoku solver.\n---------------------------");
 		Sudoku sd = new Sudoku(length, width);
 
 		long preTime = System.currentTimeMillis();
@@ -131,7 +131,6 @@ public class SudokuSolver {
 		Tools tools = new Tools(keyboard);
 		
 		int[][] board;
-		boolean generateSolutionFile = false;
 		String solutionPath = "";
 		
 		boolean keyboardReading = true;
@@ -153,102 +152,20 @@ public class SudokuSolver {
 		// -d dlx : disable DLXSolver
 		// sudoku.txt sudokuSolution.txt
 		case 2:
-			if (args[0].charAt(0) == '-') {
-				if (args[0].length() == 2 && args[0].charAt(1) == 'i') {
-					board = tools.readTXT(args[1]);
-					keyboardReading = false;
-					
-					generateSolutionFile = true;
-				}
-				else if (args[0].length() == 2 && args[0].charAt(1) == 'd') {
-					board = readSudokuPuzzle(tools);
-					
-					int decision = decideDisableSolver(args[1]);
-					if (decision == 0) {
-						enableDLXSolver = false;
-					}
-					else if (decision == 1) {
-						enableNaiveSolver = false;
-					}
-					else {
-						System.out.println("Illegal arguments. Disable naive solver");
-						enableNaiveSolver = false;
-					}
-				}
-				else {
-					System.out.println("Illegal arguments. Use keyboard reading");
-					board = readSudokuPuzzle(tools);
-				}
-			}
-			else {
+			if (args[0].charAt(0) != '-') {
 				board = tools.readTXT(args[0]);
 				keyboardReading = false;
 				
 				solutionPath = args[1];
-				generateSolutionFile = true;
+				break;
 			}
-			break;
 			
 		// -i sudoku.txt -o sudokuSolution.txt
 		// -o sudokuSolution.txt -i sudoku.txt
 		// -i sudoku.txt -d naive : disable NaiveSolver
 		// -d dancinglinksx -i sudoku.txt : disable DLXSolver
 		case 4:
-			if (args[0].equals("-i") && args[2].equals("-o")) {
-				board = tools.readTXT(args[1]);
-				keyboardReading = false;
-				
-				solutionPath = args[3];
-				generateSolutionFile = true;
-			}
-			else if (args[0].equals("-o") && args[2].equals("-i")) {
-				board = tools.readTXT(args[3]);
-				keyboardReading = false;
-				
-				solutionPath = args[1];
-				generateSolutionFile = true;
-			}
-			else if (args[0].equals("-i") && args[2].equals("-d")) {
-				board = tools.readTXT(args[1]);
-				keyboardReading = false;
-				
-				generateSolutionFile = true;
-				
-				int decision = decideDisableSolver(args[3]);
-				if (decision == 0) {
-					enableDLXSolver = false;
-				}
-				else if (decision == 1) {
-					enableNaiveSolver = false;
-				}
-				else {
-					System.out.println("Illegal arguments. Disable naive solver");
-					enableNaiveSolver = false;
-				}
-			}
-			else if (args[0].equals("-d") && args[2].equals("-i")) {
-				board = tools.readTXT(args[3]);
-				keyboardReading = false;
-				
-				generateSolutionFile = true;
-				
-				int decision = decideDisableSolver(args[1]);
-				if (decision == 0) {
-					enableDLXSolver = false;
-				}
-				else if (decision == 1) {
-					enableNaiveSolver = false;
-				}
-				else {
-					System.out.println("Illegal arguments. Disable naive solver");
-					enableNaiveSolver = false;
-				}
-			}
-			else {
-				System.out.println("Illegal arguments. Use keyboard reading");
-				board = readSudokuPuzzle(tools);
-			}
-			break;
+			;
 			
 		// -i : input file
 		// -o : output file
@@ -258,13 +175,15 @@ public class SudokuSolver {
 			String oArgument = "";
 			String dArgument = "";
 			
-			for (int i = 0; i < 5; i++) {
+			for (int i = 0; i < args.length - 1; i++) {
 				switch (args[i]) {
 				case "-i":
 					if (args[i + 1].charAt(0) != '-') {
 						iArgument = args[i + 1];
 					}
 					i++;
+					
+					keyboardReading = false;
 					break;
 				case "-o":
 					if (args[i + 1].charAt(0) != '-') {
@@ -279,13 +198,14 @@ public class SudokuSolver {
 					i++;
 					break;
 				default:
-					System.out.println("Illegal arguments. Neglect");
-					i++;
+					String info = "Illegal arguments.\n-i input\n-o output\n-d disable";
+					throw new IllegalArgumentException(info);
 				}
 			}
 			
 			if (!iArgument.isEmpty()) {
 				board = tools.readTXT(iArgument);
+				solutionPath = "sudokuSolution.txt";
 			}
 			else {
 				board = readSudokuPuzzle(tools);
@@ -335,13 +255,8 @@ public class SudokuSolver {
 				}
 			}
 
-			if (generateSolutionFile) {
-				if (solutionPath.isEmpty()) {
-					tools.outputTXT(solutionSets);
-				}
-				else {
-					tools.outputTXT(solutionSets, solutionPath);
-				}
+			if (!solutionPath.isEmpty()) {
+				tools.outputTXT(solutionSets, solutionPath);
 			}
 		}
 		

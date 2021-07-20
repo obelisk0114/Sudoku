@@ -5,6 +5,8 @@
 
 + 數獨出題 (Sudoku generator)
 
+數獨由 `1` 開始，使用 `-1` 代表空格 (empty cell)。
+
 ## 資料夾 Folder
 
 這個 project 使用下面資料夾來區分
@@ -28,12 +30,25 @@
 
 
 ### 頂層 package (default package)
+
+解數獨的程式以及相關工具程式。參數以及功能如下所示：
+
+| 參數 (arguments) | 功能 (functionality) | 額外說明 (additional info) |
+| :--- |  :---                  |        :---                |
+| `-i` | 讀取數獨題目的文字檔案 <br /> (Read sudoku puzzle from `.txt` file) | 若加入這個參數，會生成解答文件 <br /> (will generate solution `.txt` file) |
+| `-o` | 產生數獨題目的解答檔案 <br /> (Calculate sudoku puzzle solution and generate the `.txt` file) |  |
+| `-d` | 停用解法 <br /> (Disable the method) | naive: `naive` <br /> DLX: `dlx`、`dancinglinks`、`dancinglinksx` |
+
 + 主程式 (main function)：`SudokuSolver.java`。
 
 ```
 java -jar Sudoku.jar
 
+// sudoku.txt as input sudoku puzzle
 java -jar Sudoku.jar -i sudoku.txt
+
+// sudokuSolution.txt is the generated sudoku puzzle solutions
+java -jar Sudoku.jar -o sudokuSolution.txt
 
 // disable DLX solver
 java -jar Sudoku.jar -d dlx
@@ -43,13 +58,14 @@ java -jar Sudoku.jar -d dancinglinks
 // disable naive solver
 java -jar Sudoku.jar -d naive
 
+// sudoku.txt is the input sudoku puzzle. sudokuSolution.txt is the output sudoku puzzle solutions.
 java -jar Sudoku.jar sudoku.txt sudokuSolution.txt
 
 java -jar Sudoku.jar -i sudoku.txt -o sudokuSolution.txt
 java -jar Sudoku.jar -i sudoku.txt -d naive
+java -jar Sudoku.jar -o sudokuSolution.txt -d naive
 
 java -jar Sudoku.jar -i sudoku.txt -o sudokuSolution.txt -d naive
-
 ```
     
 + 工具程式 (tool provider)：`Tools.java`。
